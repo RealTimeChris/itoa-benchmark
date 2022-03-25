@@ -22,29 +22,29 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{4E7FADFE-F0E0-4B5F-AF02-627EC8CE6D4E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -107,7 +107,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <Optimization>Full</Optimization>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -128,27 +128,44 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="itoa_jeaiii64.cpp" />
-    <ClCompile Include="src\amartin.cpp" />
+    <ClCompile Include="src\amartin.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\branchlut.cpp" />
     <ClCompile Include="src\branchlut2.cpp" />
     <ClCompile Include="src\count.cpp" />
     <ClCompile Include="src\countlut.cpp" />
     <ClCompile Include="src\folly.cpp" />
     <ClCompile Include="src\itoa_jeaiii.cpp" />
-    <ClCompile Include="src\itoa_jeaiii_bind.cpp" />
+    <ClCompile Include="src\itoa_jeaiii_bind.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp17</LanguageStandard>
+    </ClCompile>
     <ClCompile Include="src\lut.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\mwilson.cpp" />
+    <ClCompile Include="src\mwilson.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\naive.cpp" />
     <ClCompile Include="src\null.cpp" />
     <ClCompile Include="src\ostringstream.cpp" />
     <ClCompile Include="src\ostrstream.cpp" />
-    <ClCompile Include="src\sprintf.cpp" />
-    <ClCompile Include="src\sse2.cpp" />
-    <ClCompile Include="src\to_string.cpp" />
+    <ClCompile Include="src\sprintf.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sse2.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\to_chars.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\to_string.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\unnamed.cpp" />
     <ClCompile Include="src\unrolledlut.cpp" />
-    <ClCompile Include="src\vc.cpp" />
+    <ClCompile Include="src\vc.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\countdecimaldigit.h" />
@@ -159,6 +176,7 @@
     <ClInclude Include="src\resultfilename.h" />
     <ClInclude Include="src\test.h" />
     <ClInclude Include="src\timer.h" />
+    <ClInclude Include="src\int_to_chars_jeaiii.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="result\corei7920%402.67_cygwin32_gcc4.8.html" />

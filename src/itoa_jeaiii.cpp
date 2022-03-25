@@ -43,10 +43,6 @@ static const pair s_pairs[] = { P('0'), P('1'), P('2'), P('3'), P('4'), P('5'), 
 #define L1 W(0, u)
 #define L2 A(1), S(2)
 #define L3 A(2), D(2)
-
-//inline void d3(char* b, uint32_t u0, uint32_t u1) { W(2, u1), W(0, u0); }
-//#define L3 d3(b, u/100u, u%100u)
-
 #define L4 A(3), D(2), S(4)
 #define L5 A(4), D(2), D(4)
 #define L6 A(5), D(2), D(4), S(6)

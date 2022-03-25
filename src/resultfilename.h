@@ -1,9 +1,9 @@
 #pragma once
 
-//#include "machine.h"
-
-#ifndef MACHINE
-#define MACHINE "unknown"
+#ifdef _DEBUG 
+#define OPTIMIZE "debug"
+#else
+#define OPTIMIZE "release"
 #endif
 
 #if defined(_WIN64)
@@ -45,7 +45,11 @@
 #define STR(x) STR_HELPER(x)
 
 #if defined(_MSC_VER)
-#   if _MSC_VER >= 1910
+#   if _MSC_VER >= 1930
+#       define COMPILER "vc2022"
+#   elif _MSC_VER >= 1920
+#       define COMPILER "vc2019"
+#   elif _MSC_VER >= 1910
 #       define COMPILER "vc2017"
 #   elif _MSC_VER >= 1900
 #       define COMPILER "vc2015"
@@ -70,4 +74,4 @@
 #   define COMPILER "Unknown"
 #endif
 
-#define RESULT_FILENAME MACHINE "_" OS "_" COMPILER ".json"
+#define RESULT_FILENAME OPTIMIZE "_" OS "_" COMPILER ".js"

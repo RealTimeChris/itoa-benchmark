@@ -4,6 +4,7 @@
 #include <cstring>
 #include <exception>
 #include <limits>
+#include <random>
 #include <stdint.h>
 #include <stdlib.h>
 #include "resultfilename.h"
@@ -14,9 +15,9 @@
 Changes Copyright (c) 2018 James Edward Anhalt III - https://github.com/jeaiii
 */
 
-const unsigned c_scale = 4096*2;
+const unsigned c_scale = 4096 * 4;
 
-const int kTrial = 128;
+const int kTrial = 256 * 8;
 
 template <typename T>
 struct Traits {
@@ -27,6 +28,7 @@ struct Traits<uint32_t> {
     enum { kBufferSize = 11 };
     enum { kMaxDigit = 10 };
     static uint32_t Negate(uint32_t x) { return x; };
+    static constexpr auto categories = "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'URND LEN']";
 };
 
 template <>
@@ -34,6 +36,7 @@ struct Traits<int32_t> {
     enum { kBufferSize = 12 };
     enum { kMaxDigit = 10 };
     static int32_t Negate(int32_t x) { return -x; };
+    static constexpr auto categories = "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'URND LEN']";
 };
 
 template <>
@@ -41,6 +44,7 @@ struct Traits<uint64_t> {
     enum { kBufferSize = 21 };
     enum { kMaxDigit = 20 };
     static uint64_t Negate(uint64_t x) { return x; };
+    static constexpr auto categories = "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 'URND LEN']";
 };
 
 template <>
@@ -48,6 +52,7 @@ struct Traits<int64_t> {
     enum { kBufferSize = 21 };
     enum { kMaxDigit = 19 };
     static int64_t Negate(int64_t x) { return -x; };
+    static constexpr auto categories = "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 'URND LEN']";
 };
 
 template <typename T>
@@ -60,7 +65,7 @@ static void VerifyValue(T value, void(*f)(T, char*), void(*g)(T, char*), const c
 
     if (strcmp(buffer1, buffer2) != 0) {
         printf("\nError: %s -> %s, %s -> %s\n", fname, buffer1, gname, buffer2);
-        throw std::exception();
+        //throw std::exception();
     }
     //puts(buffer1);
 }
@@ -109,9 +114,9 @@ void VerifyAll() {
         if (strcmp((*itr)->fname, "null") != 0) {   // skip null
             try {
                 Verify(naive->u32toa, (*itr)->u32toa, "naive_u32toa", (*itr)->fname);
-                Verify(naive->i32toa, (*itr)->i32toa, "naive_i32toa", (*itr)->fname);
-                Verify(naive->u64toa, (*itr)->u64toa, "naive_u64toa", (*itr)->fname);
-                Verify(naive->i64toa, (*itr)->i64toa, "naive_i64toa", (*itr)->fname);
+                //Verify(naive->i32toa, (*itr)->i32toa, "naive_i32toa", (*itr)->fname);
+                //Verify(naive->u64toa, (*itr)->u64toa, "naive_u64toa", (*itr)->fname);
+                //Verify(naive->i64toa, (*itr)->i64toa, "naive_i64toa", (*itr)->fname);
             }
             catch (...) {
             }
@@ -147,8 +152,6 @@ uint64_t BenchData(void(*f)(T, char*), const T(&data)[N])
     char buffer[Traits<T>::kBufferSize];
     uint64_t duration = std::numeric_limits<uint64_t>::max();
 
-   // Sleep(15);
-
     int trial = kTrial;
     do {
 
@@ -163,15 +166,14 @@ uint64_t BenchData(void(*f)(T, char*), const T(&data)[N])
             f(data[i + 6], buffer);
             f(data[i + 7], buffer);
         }
-
-        time = (TimeLeave() - time) / N;
+        time = TimeLeave() - time;
 
         if (time < duration)
             duration = time, trial = kTrial;
 
     } while (--trial > 0);
 
-    return duration;
+    return duration / N;
 }
 
 template <typename T>
@@ -231,7 +233,10 @@ private:
                 sign = Traits<T>::Negate(sign);
             x /= 10;
         }
-        std::random_shuffle(m_data, m_data + N);
+
+        //std::random_device rd;
+        std::mt19937 g(19700619);
+        std::shuffle(m_data, m_data + N, g);
     }
 
     T m_data[N];
@@ -243,7 +248,7 @@ void BenchRandom(void(*f)(T, char*), const char* type, const char* fname, FILE* 
 
     uint64_t duration = BenchData(f, RandomData<T, c_scale>::GetData());
 
-    fprintf(fp, "%lld", duration);
+    fprintf(fp, "%lld,", duration);
     printf("%lld cc\n", duration);
 }
 
@@ -252,7 +257,9 @@ void Bench(void(*f)(T, char*), const char* type, const char* fname, FILE* fp) {
 
     fprintf(fp, "{ name: '%s', data:[", fname);
 
+    //Sleep(1);
     BenchSequential(f, type, fname, fp);
+    //Sleep(1);
     BenchRandom(f, type, fname, fp);
 
     fprintf(fp, "]},\n");
@@ -262,47 +269,49 @@ void Bench(void(*f)(T, char*), const char* type, const char* fname, FILE* fp) {
 void BenchAll() {
     // Try to write to /result path, where template.php exists
     FILE *fp;
-    if ((fp = fopen("../../result/template.php", "r")) != NULL) {
-        fclose(fp);
-        fp = fopen("../../result/" RESULT_FILENAME, "w");
-    }
-    else if ((fp = fopen("../result/template.php", "r")) != NULL) {
-        fclose(fp);
-        fp = fopen("../result/" RESULT_FILENAME, "w");
-    }
-    else
-        fp = fopen(RESULT_FILENAME, "w");
+    fp = fopen(RESULT_FILENAME, "w");
 
     const TestList& tests = TestManager::Instance().GetTests();
 
     fprintf(fp, "var tests=[\n");
 
     puts("u32toa");
-    fprintf(fp, "{ name: 'u32toa', data:[\n");
+    fprintf(fp, "{ name: 'u32toa', info: '" OPTIMIZE " " OS " " COMPILER "'");
+    fprintf(fp, ", categories: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'URND LEN']");
+    fprintf(fp, ", data: [\n");
     for (TestList::const_iterator itr = tests.begin(); itr != tests.end(); ++itr)
         Bench((*itr)->u32toa, "u32toa", (*itr)->fname, fp);
     fprintf(fp, "]},\n");
 
+#if 0
+
     puts("");
     puts("i32toa");
-    fprintf(fp, "{ name: 'i32toa', data:[\n");
+    fprintf(fp, "{ name: 'i32toa', info: '" OPTIMIZE " " OS " " COMPILER "'");
+    fprintf(fp, ", categories: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'URND LEN']");
+    fprintf(fp, ", data: [\n");
     for (TestList::const_iterator itr = tests.begin(); itr != tests.end(); ++itr)
         Bench((*itr)->i32toa, "i32toa", (*itr)->fname, fp);
     fprintf(fp, "]},\n");
 
     puts("");
     puts("u64toa");
-    fprintf(fp, "{ name: 'u64toa', data:[\n");
+    fprintf(fp, "{ name: 'u64toa', info: '" OPTIMIZE " " OS " " COMPILER "'");
+    fprintf(fp, ", categories: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 'URND LEN']");
+    fprintf(fp, ", data: [\n");
     for (TestList::const_iterator itr = tests.begin(); itr != tests.end(); ++itr)
         Bench((*itr)->u64toa, "u64toa", (*itr)->fname, fp);
     fprintf(fp, "]},\n");
 
     puts("");
     puts("i64toa");
-    fprintf(fp, "{ name: 'i64toa', data:[\n");
+    fprintf(fp, "{ name: 'i64toa', info: '" OPTIMIZE " " OS " " COMPILER "'");
+    fprintf(fp, ", categories: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 'URND LEN']");
+    fprintf(fp, ", data: [\n");
     for (TestList::const_iterator itr = tests.begin(); itr != tests.end(); ++itr)
         Bench((*itr)->i64toa, "i64toa", (*itr)->fname, fp);
     fprintf(fp, "]},\n");
+#endif
 
     fprintf(fp, "];\n");
     fclose(fp);
@@ -313,7 +322,7 @@ int main() {
     TestList& tests = TestManager::Instance().GetTests();
 
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
-    SetThreadAffinityMask(GetCurrentThread(), 1);
+    SetThreadAffinityMask(GetCurrentThread(), 1 << 3);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 
     VerifyAll();

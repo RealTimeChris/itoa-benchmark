@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2017 James Edward Anhalt III - https://github.com/jeaiii/itoa
+Copyright (c) 2022 James Edward Anhalt III - https://github.com/jeaiii/itoa
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,46 +27,14 @@ SOFTWARE.
 
 struct pair { char t, o; };
 #define P(T) T, '0',  T, '1', T, '2', T, '3', T, '4', T, '5', T, '6', T, '7', T, '8', T, '9'
-static const pair s_pairs[] = { P('0'), P('1'), P('2'), P('3'), P('4'), P('5'), P('6'), P('7'), P('8'), P('9') };
-
-
-static const pair s_heads[] = { 
+static const pair s_pairs[]{ P('0'), P('1'), P('2'), P('3'), P('4'), P('5'), P('6'), P('7'), P('8'), P('9') };
+static const pair s_heads[]
+{ 
  '0', 0, '1', 0, '2', 0, '3', 0, '4', 0, '5', 0, '6', 0, '7', 0, '8', 0, '9', 0,
-P('1'), P('2'), P('3'), P('4'), P('5'), P('6'), P('7'), P('8'), P('9') };
+ P('1'), P('2'), P('3'), P('4'), P('5'), P('6'), P('7'), P('8'), P('9')
+};
 
-#define W(N, I) *(pair*)&b[N] = s_pairs[I]
-#define A(N) t = (uint64_t(1) << (32 + N / 5 * N * 53 / 16)) / uint32_t(1e##N) + 1 + N/6 - N/8, t *= u, t >>= N / 5 * N * 53 / 16, t += N / 6 * 4, W(0, t >> 32)
-#define S(N) b[N] = char(uint64_t(10) * uint32_t(t) >> 32) + '0'
-#define D(N) t = uint64_t(100) * uint32_t(t), W(N, t >> 32)
-
-#define C0 b[0] = char(u) + '0'
-#define C1 W(0, u)
-#define C2 A(1), S(2)
-#define C3 A(2), D(2)
-#define C4 A(3), D(2), S(4)
-#define C5 A(4), D(2), D(4)
-#define C6 A(5), D(2), D(4), S(6)
-#define C7 A(6), D(2), D(4), D(6)
-#define C8 A(7), D(2), D(4), D(6), S(8)
-#define C9 A(8), D(2), D(4), D(6), D(8)
-
-#define L09(F) u < 100        ? L01(F) : L29(F)
-#define L29(F) u < 1000000    ? L25(F) : L69(F)
-#define L25(F) u < 10000      ? L23(F) : L45(F)
-#define L69(F) u < 100000000  ? L67(F) : L89(F)
-#define L03(F) u < 100        ? L01(F) : L23(F)
-
-#define L01(F) u < 10         ? F(0) : F(1)
-#define L23(F) u < 1000       ? F(2) : F(3)
-#define L45(F) u < 100000     ? F(4) : F(5)
-#define L67(F) u < 10000000   ? F(6) : F(7)
-#define L89(F) u < 1000000000 ? F(8) : F(9)
-
-#define POS(N) (N < length ? C##N, N + 1 : N + 1)
-#define NEG(N) (N + 1 < length ? *b++ = '-', C##N, N + 2 : N + 2)
-
-
-#define K(N) ((uint64_t(1) << 57) / uint32_t(1e##N) + 1)
+#define K(N) ((((uint64_t(1) << 57) + uint64_t(1e##N) - 1) / uint64_t(1e##N)))
 
 void u64toa_jeaiii(uint64_t n, char* b);
 
@@ -123,5 +91,54 @@ void u64toa_jeaiii64(uint64_t n, char *b) {
 
         : u64toa_jeaiii(n, b);
 }
+
+void i64toa_jeaiii64(int64_t n, char* b) {
+    uint64_t u = n;
+    if (n < 0) *b++ = '-', u = 0 - u;
+    u64toa_jeaiii64(u, b);
+}
+
+#define Y(N) (((((uint64_t(1) << 32) + uint64_t(1e##N) - 1) / uint64_t(1e##N))))
+void u32toa_jeaiii64(uint32_t n, char* b)
+{
+    uint64_t t;
+
+    n < 100
+        ? (b[2] = 0, *(pair*)b = s_heads[n])
+        : n < 1000000
+        ? n < 10000
+        ? (
+            t = (uint64_t(0x1p32) / uint64_t(1e2) + 1) * n, *(pair*)b = s_heads[t >> 32], b -= 6, b -= n < 1000, b[10] = 0,
+            t = uint32_t(t), t *= 100, *(pair*)&b[8] = s_pairs[t >> 32]
+            )
+        : (
+            t = (uint64_t(0x1p32) / uint64_t(1e4) + 1) * n, *(pair*)b = s_heads[t >> 32], b -= 4, b -= n < 100000, b[10] = 0,
+            t = uint32_t(t), t *= 100, *(pair*)&b[6] = s_pairs[t >> 32],
+            t = uint32_t(t), t *= 100, *(pair*)&b[8] = s_pairs[t >> 32]
+            )
+        : n < 100000000
+        ? (
+            t = (uint64_t(0x1p48) / uint64_t(1e6) + 1) * n >> 16, *(pair*)b = s_heads[t >> 32], b -= 2, b -= n < 10000000, b[10] = 0,
+            t = uint32_t(t), t *= 100, *(pair*)&b[4] = s_pairs[t >> 32],
+            t = uint32_t(t), t *= 100, *(pair*)&b[6] = s_pairs[t >> 32],
+            t = uint32_t(t), t *= 100, *(pair*)&b[8] = s_pairs[t >> 32]
+            )
+        : (
+            
+            t = (uint64_t(0x1p58) / uint64_t(1e8) + 1)* n >> 26, *(pair*)b = s_heads[t >> 32], b -= n < 1000000000, b[10] = 0,
+            t = uint32_t(t), t *= 100, *(pair*)&b[2] = s_pairs[t >> 32],
+            t = uint32_t(t), t *= 100, *(pair*)&b[4] = s_pairs[t >> 32],
+            t = uint32_t(t), t *= 100, *(pair*)&b[6] = s_pairs[t >> 32],
+            t = uint32_t(t), t *= 100, *(pair*)&b[8] = s_pairs[t >> 32]
+            )
+        ;
+
+}
+
+void i32toa_jeaiii64(int32_t n, char* b) {
+    uint32_t u = n < 0 ? *b++ = '-', 0 - uint32_t(n) : n;
+    u32toa_jeaiii64(u, b);
+}
+
 
 //t <<= 7 + 0, t >>= 7 + 0, t *= 25, *(pair*)&b[2] = s_pairs[t >> 57 - 2],
