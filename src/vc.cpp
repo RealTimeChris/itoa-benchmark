@@ -20,6 +20,6 @@ void i64toa_vc(int64_t value, char* buffer) {
     _i64toa(value, buffer, 10);
 }
 
-REGISTER_TEST(vc);
+//REGISTER_TEST(vc);
 
 #endif

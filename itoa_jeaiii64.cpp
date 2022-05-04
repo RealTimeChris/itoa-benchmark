@@ -89,7 +89,7 @@ void u64toa_jeaiii64(uint64_t n, char *b) {
             t -= n << 57 - 8, t *= 25, *(pair*)&b[10] = s_pairs[n = t >> 57 - 10],
             b[12] = 0)
 
-        : u64toa_jeaiii(n, b);
+        : (char)(u64toa_jeaiii(n, b), 0);
 }
 
 void i64toa_jeaiii64(int64_t n, char* b) {
@@ -98,41 +98,67 @@ void i64toa_jeaiii64(int64_t n, char* b) {
     u64toa_jeaiii64(u, b);
 }
 
-#define Y(N) (((((uint64_t(1) << 32) + uint64_t(1e##N) - 1) / uint64_t(1e##N))))
-void u32toa_jeaiii64(uint32_t n, char* b)
+static constexpr union
 {
-    uint64_t t;
+    char _[402]{
+        "00010203040506070809"
+        "10111213141516171819202122232425262728293031323334353637383940414243444546474849"
+        "5051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899"
+        "0\0001\0002\0003\0004\0005\0006\0007\0008\0009\000"
+        "10111213141516171819202122232425262728293031323334353637383940414243444546474849"
+        "5051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899"
+        "\000"
+    };
+    struct
+    {
+        pair dd[100];
+        pair fd[100];
+        pair z;
+    };
+}
+digits{ };
 
-    n < 100
-        ? (b[2] = 0, *(pair*)b = s_heads[n])
-        : n < 1000000
-        ? n < 10000
-        ? (
-            t = (uint64_t(0x1p32) / uint64_t(1e2) + 1) * n, *(pair*)b = s_heads[t >> 32], b -= 6, b -= n < 1000, b[10] = 0,
-            t = uint32_t(t), t *= 100, *(pair*)&b[8] = s_pairs[t >> 32]
-            )
-        : (
-            t = (uint64_t(0x1p32) / uint64_t(1e4) + 1) * n, *(pair*)b = s_heads[t >> 32], b -= 4, b -= n < 100000, b[10] = 0,
-            t = uint32_t(t), t *= 100, *(pair*)&b[6] = s_pairs[t >> 32],
-            t = uint32_t(t), t *= 100, *(pair*)&b[8] = s_pairs[t >> 32]
-            )
-        : n < 100000000
-        ? (
-            t = (uint64_t(0x1p48) / uint64_t(1e6) + 1) * n >> 16, *(pair*)b = s_heads[t >> 32], b -= 2, b -= n < 10000000, b[10] = 0,
-            t = uint32_t(t), t *= 100, *(pair*)&b[4] = s_pairs[t >> 32],
-            t = uint32_t(t), t *= 100, *(pair*)&b[6] = s_pairs[t >> 32],
-            t = uint32_t(t), t *= 100, *(pair*)&b[8] = s_pairs[t >> 32]
-            )
-        : (
-            
-            t = (uint64_t(0x1p58) / uint64_t(1e8) + 1)* n >> 26, *(pair*)b = s_heads[t >> 32], b -= n < 1000000000, b[10] = 0,
-            t = uint32_t(t), t *= 100, *(pair*)&b[2] = s_pairs[t >> 32],
-            t = uint32_t(t), t *= 100, *(pair*)&b[4] = s_pairs[t >> 32],
-            t = uint32_t(t), t *= 100, *(pair*)&b[6] = s_pairs[t >> 32],
-            t = uint32_t(t), t *= 100, *(pair*)&b[8] = s_pairs[t >> 32]
-            )
-        ;
-
+inline void u32toa_jeaiii64(uint32_t n, char* b) noexcept
+{
+    if (n < 100)
+    {
+        b[2] = 0, * (pair*)b = digits.fd[n];
+    }
+    else if (n < 1000000)
+    {
+        if (n < 10000)
+        {
+            auto t = (uint64_t(0x1p32) / uint64_t(1e2) + 1) * n;
+            *(pair*)b = digits.fd[t >> 32], b -= n < 1000, b[4] = 0;
+            t = uint32_t(t), t *= 100, * (pair*)&b[2] = digits.dd[t >> 32];
+        }
+        else
+        {
+            auto t = (uint64_t(0x1p32) / uint64_t(1e4) + 1) * n;
+            *(pair*)b = digits.fd[t >> 32], b -= n < 100000, b[6] = 0;
+            t = uint32_t(t), t *= 100, * (pair*)&b[2] = digits.dd[t >> 32];
+            t = uint32_t(t), t *= 100, * (pair*)&b[4] = digits.dd[t >> 32];
+        }
+    }
+    else {
+        if (n < 100000000)
+        {
+            auto t = (uint64_t(0x1p48) / uint64_t(1e6) + 1) * n >> 16;
+            *(pair*)b = digits.fd[t >> 32], b -= n < 10000000, b[8] = 0;
+            t = uint32_t(t), t *= 100, * (pair*)&b[2] = digits.dd[t >> 32];
+            t = uint32_t(t), t *= 100, * (pair*)&b[4] = digits.dd[t >> 32];
+            t = uint32_t(t), t *= 100, * (pair*)&b[6] = digits.dd[t >> 32];
+        }
+        else
+        {
+            auto t = (uint64_t(0x1p58) / uint64_t(1e8) + 1) * n >> 26;
+            *(pair*)b = digits.fd[t >> 32], b -= n < 1000000000, b[10] = 0;
+            t = uint32_t(t), t *= 100, * (pair*)&b[2] = digits.dd[t >> 32];
+            t = uint32_t(t), t *= 100, * (pair*)&b[4] = digits.dd[t >> 32];
+            t = uint32_t(t), t *= 100, * (pair*)&b[6] = digits.dd[t >> 32];
+            t = uint32_t(t), t *= 100, * (pair*)&b[8] = digits.dd[t >> 32];
+        }
+    }
 }
 
 void i32toa_jeaiii64(int32_t n, char* b) {

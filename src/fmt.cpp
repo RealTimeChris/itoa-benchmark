@@ -24,35 +24,12 @@ SOFTWARE.
 */
 
 #include "test.h"
-#define CAT(_, ...) _ ## __VA_ARGS__
-#define REGISTER_TEST_OVERLOAD(f) static Test CAT(gRegister, __LINE__)(STRINGIFY(f), f, f, f, f)
 
+#define NDEBUG
+#include "fmt/compile.h"
 
-#include "int_to_chars_jeaiii.h"
-#include "jeaiii_to_text_from_integer.h"
-
-#if 1
-namespace jeaiii
-{
-    void to_text(uint32_t n, char* b) { *jeaiii::n32_to_text(n, b) = 0; }
-    void to_text(int32_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
-    void to_text(uint64_t n, char* b) { *jeaiii::n64_to_text(n, b) = 0; }
-    void to_text(int64_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
-}
-REGISTER_TEST_OVERLOAD(jeaiii::to_text);
-#endif
-
-
-#if 1
-REGISTER_TEST_OVERLOAD(int_to_chars_jeaiii<void>);
-#endif
-
-#if 0
-void u32toa_jeaiii(uint32_t i, char* b);
-void i32toa_jeaiii(int32_t i, char* b);
-void u64toa_jeaiii(uint64_t i, char* b);
-void i64toa_jeaiii(int64_t i, char* b);
-
-REGISTER_TEST(jeaiii);
-#endif
-
+void u32toa_fmt(uint32_t n, char* b) { *fmt::format_to(b, FMT_COMPILE("{}"), n) = 0; }
+void i32toa_fmt(int32_t n, char* b) { *fmt::format_to(b, FMT_COMPILE("{}"), n) = 0; }
+void u64toa_fmt(uint64_t n, char* b) { *fmt::format_to(b, FMT_COMPILE("{}"), n) = 0; }
+void i64toa_fmt(int64_t n, char* b) { *fmt::format_to(b, FMT_COMPILE("{}"), n) = 0; }
+REGISTER_TEST(fmt); 
