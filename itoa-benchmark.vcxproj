@@ -127,7 +127,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="itoa_jeaiii64.cpp" />
     <ClCompile Include="src\amartin.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -179,7 +178,9 @@
     <ClCompile Include="src\unnamed.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\unrolledlut.cpp" />
+    <ClCompile Include="src\unrolledlut.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\vc.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -187,6 +188,7 @@
   <ItemGroup>
     <ClInclude Include="src\countdecimaldigit.h" />
     <ClInclude Include="src\digitslut.h" />
+    <ClInclude Include="src\itoa_jeaiii64.h" />
     <ClInclude Include="src\itoa_ljust.h" />
     <ClInclude Include="src\jeaiii_to_text_from_integer.h" />
     <ClInclude Include="src\msinttypes\inttypes.h" />

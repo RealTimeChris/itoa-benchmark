@@ -67,7 +67,7 @@ namespace jeaiii
 
         //https://godbolt.org/z/b5qe1bTev
 
-    __forceinline char* n32_to_text(u32 n, char* b) noexcept
+    __forceinline char* to_text_n32(char* b, u32 n) noexcept
     {
         if (n < u32(1e2))
         {
@@ -121,17 +121,17 @@ namespace jeaiii
         return b + 10;
     };
 
-    __forceinline char* n64_to_text(u64 n, char* b) noexcept
+    __forceinline char* to_text_n64(char* b, u64 n) noexcept
     {
         if (n == u32(n))
-            return n32_to_text(u32(n), b);
+            return to_text_n32(b, u32(n));
 
         u64 h = n / u32(1e8);
         u32 z = n % u32(1e8);
 
         if (h == u32(h))
         {
-            b = n32_to_text(h, b);
+            b = to_text_n32(b, u32(h));
         }
         else
         {

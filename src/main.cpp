@@ -264,8 +264,8 @@ void BenchRandom(FILE* fp, void(*f)(T, char*), const char* type, const char* fna
 }
 
 template <typename T>
-void Bench(FILE* fp, void(*f)(T, char*), const char* type, const char* fname) {
-
+void Bench(FILE* fp, void(*f)(T, char*), const char* type, const char* fname)
+{
     fprintf(fp, "{ name: '%s', data:[", fname);
 
     //Sleep(1);
@@ -292,7 +292,12 @@ void Bench(FILE* fp, const TestList& tests)
     fprintf(fp, ", data: [\n");
 
     for (TestList::const_iterator itr = tests.begin(); itr != tests.end(); ++itr)
-        Bench(fp, get_function<T>(*itr), Traits<T>::name, (*itr)->fname);
+    {
+        //if (strcmp((*itr)->fname, "naive") != 0)
+        {
+            Bench(fp, get_function<T>(*itr), Traits<T>::name, (*itr)->fname);
+        }
+    }
 
     fprintf(fp, "]},\n");
 }

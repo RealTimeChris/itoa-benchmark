@@ -30,13 +30,14 @@ SOFTWARE.
 
 #include "int_to_chars_jeaiii.h"
 #include "jeaiii_to_text_from_integer.h"
+#include "itoa_jeaiii64.h"
 
 #if 1
 namespace jeaiii
 {
-    void to_text(uint32_t n, char* b) { *jeaiii::n32_to_text(n, b) = 0; }
+    void to_text(uint32_t n, char* b) { *jeaiii::to_text_n32(b, n) = 0; }
     void to_text(int32_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
-    void to_text(uint64_t n, char* b) { *jeaiii::n64_to_text(n, b) = 0; }
+    void to_text(uint64_t n, char* b) { *jeaiii::to_text_n64(b, n) = 0; }
     void to_text(int64_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
 }
 REGISTER_TEST_OVERLOAD(jeaiii::to_text);
@@ -46,6 +47,18 @@ REGISTER_TEST_OVERLOAD(jeaiii::to_text);
 #if 1
 REGISTER_TEST_OVERLOAD(int_to_chars_jeaiii<void>);
 #endif
+
+#if 1
+namespace jeaiii64
+{
+    void to_text(uint32_t n, char* b) { *to_text_from_integer(b, n) = 0; }
+    void to_text(int32_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
+    void to_text(uint64_t n, char* b) { *to_text_from_integer(b, n) = 0; }
+    void to_text(int64_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
+}
+REGISTER_TEST_OVERLOAD(jeaiii64::to_text);
+#endif
+
 
 #if 0
 void u32toa_jeaiii(uint32_t i, char* b);
