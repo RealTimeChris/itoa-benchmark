@@ -27,5 +27,5 @@ void i64toa_ostrstream(int64_t value, char* buffer) {
 }
 
 #if RUN_CPPITOA
-REGISTER_TEST(ostrstream);
+//REGISTER_TEST(ostrstream);
 #endif

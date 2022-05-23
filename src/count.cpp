@@ -43,4 +43,4 @@ void i64toa_count(int64_t value, char* buffer) {
     u64toa_count(u, buffer);
 }
 
-REGISTER_TEST(count);
+//REGISTER_TEST(count);

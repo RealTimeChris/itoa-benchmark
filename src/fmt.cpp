@@ -32,4 +32,4 @@ void u32toa_fmt(uint32_t n, char* b) { *fmt::format_to(b, FMT_COMPILE("{}"), n) 
 void i32toa_fmt(int32_t n, char* b) { *fmt::format_to(b, FMT_COMPILE("{}"), n) = 0; }
 void u64toa_fmt(uint64_t n, char* b) { *fmt::format_to(b, FMT_COMPILE("{}"), n) = 0; }
 void i64toa_fmt(int64_t n, char* b) { *fmt::format_to(b, FMT_COMPILE("{}"), n) = 0; }
-REGISTER_TEST(fmt); 
+//REGISTER_TEST(fmt); 

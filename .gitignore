@@ -12,3 +12,7 @@ src/machine.h
 /x64/Debug
 /x64/Release
 *.filters
+itoa-benchmark/x64/Release/ostrstream.obj
+build/
+x64/
+release_win64_vc2022.js

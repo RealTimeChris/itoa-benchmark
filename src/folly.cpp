@@ -38,6 +38,6 @@ void i64toa_folly(int64_t value, char* buffer) {
         buffer[uint64ToBufferUnsafe(value, buffer)] = '\0';
 }
 
-REGISTER_TEST(folly);
+//REGISTER_TEST(folly);
 
 #endif

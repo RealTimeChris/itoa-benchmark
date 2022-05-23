@@ -19,4 +19,4 @@ void i64toa_sprintf(int64_t value, char* buffer) {
     sprintf(buffer, "%" PRIi64, value);
 }
 
-REGISTER_TEST(sprintf);
+//REGISTER_TEST(sprintf);

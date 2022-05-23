@@ -43,4 +43,4 @@ void i64toa_mwilson(int64_t value, char* buffer) {
     convert(buffer, value);
 }
 
-REGISTER_TEST(mwilson);
+//REGISTER_TEST(mwilson);
