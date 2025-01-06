@@ -13,4 +13,4 @@ void u64toa_null(uint64_t, char*) {
 void i64toa_null(int64_t, char*) {
 }
 
-//REGISTER_TEST(null);
+////REGISTER_TEST(null);

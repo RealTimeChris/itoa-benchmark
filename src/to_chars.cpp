@@ -1,5 +1,7 @@
+//#include <charconv>
+
 /*
-Copyright (c) 2017 James Edward Anhalt III - https://github.com/jeaiii/itoa/int_to_chars_jeaiii.h
+Copyright (c) 2017 James Edward Anhalt III - https://github.com/jeaiii/to_chars_jeaiii
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -27,8 +29,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <stdint.h>
-#include <type_traits>
-#include <cstring>
 
 struct pair { char t, o; };
 #define P(T) T, '0',  T, '1', T, '2', T, '3', T, '4', T, '5', T, '6', T, '7', T, '8', T, '9'
@@ -62,31 +62,33 @@ static const pair s_pairs[] = { P('0'), P('1'), P('2'), P('3'), P('4'), P('5'), 
 #define L67(F) u < 10000000   ? F(6) : F(7)
 #define L89(F) u < 1000000000 ? F(8) : F(9)
 
-#define PART(N) (C##N, b += N + 1)
-#define LAST(N) (C##N, terminate<RESULT>(b + N + 1))
+template<bool COND> struct enabled;
+template<> struct enabled<true> { typedef decltype(nullptr) type; };
+#define ENABLED(COND) typename enabled<(COND)>::type = nullptr
 
-template<class T> inline T terminate(char* b) { return T{}; }
-template<> inline void terminate<void>(char* b) { *b = 0; }
+#define LAST(N) (C##N, TERMINATE ? b[N + 1] = 0 : 0, b + N + 1)
 
-template<class RESULT = char*, class T, std::enable_if_t<(sizeof(T) <= sizeof(uint32_t))>* = 0>
-inline RESULT int_to_chars_jeaiii(T i, char* b)
+template<bool TERMINATE, class T, ENABLED(sizeof(T) <= 4)>
+__forceinline char* to_chars_jeaiii(char* b, T i)
 {
     uint64_t t;
-    uint32_t u = i < 0 ? *b++ = '-', 0u - uint32_t(int32_t(i)) : uint32_t(i);
+    uint32_t u = i < T(0) ? *b++ = '-', 0 - uint32_t(int32_t(i)) : uint32_t(i);
     return L09(LAST);
 }
 
-template<class RESULT = char*, class T>
-inline RESULT int_to_chars_jeaiii(T i, char* b)
+#define PART(N) (C##N, b += N + 1)
+
+template<bool TERMINATE, class T, ENABLED(sizeof(T) == 8)>
+__forceinline char* to_chars_jeaiii(char* b, T i)
 {
     uint64_t t;
-    uint64_t n = i < 0 ? *b++ = '-', 0u - uint64_t(i) : uint64_t(i);
+    uint64_t n = i < T(0) ? *b++ = '-', 0 - uint64_t(i) : uint64_t(i);
     uint32_t u = uint32_t(n);
 
     if (u == n)
         return L09(LAST);
 
-    uint64_t a = n / 100000000u;
+    uint64_t a = n / 100000000;
     u = uint32_t(a);
 
     if (u == a)
@@ -95,33 +97,38 @@ inline RESULT int_to_chars_jeaiii(T i, char* b)
     }
     else
     {
-        u = uint32_t(a / 100000000u);
+        u = uint32_t(a / 100000000);
         L03(PART);
-        u = a % 100000000u;
+        u = a % 100000000;
         PART(7);
     }
 
-    u = n % 100000000u;
+    u = n % 100000000;
     return LAST(7);
 }
 
-template<class RESULT, class ERROR, ERROR TOO_LARGE, class T>
-inline RESULT to_chars_from_int_jeaiii(char *first, char* last, T value)
-{
-    char temp[20];
-    auto count = last - first;
-    char* next = int_to_chars_jeaiii(value, count < 20 ? temp : first);
+void u32toa_to_chars_jeaiii(uint32_t n, char* b) { to_chars_jeaiii<true>(b, n); }
+void i32toa_to_chars_jeaiii(int32_t n, char* b) { to_chars_jeaiii<true>(b, n); }
+void u64toa_to_chars_jeaiii(uint64_t n, char* b) { to_chars_jeaiii<true>(b, n); }
+void i64toa_to_chars_jeaiii(int64_t n, char* b) { to_chars_jeaiii<true>(b, n); }
 
-    // all integers fit in 20 chars
-    if (count < 20)
+#include <cstring>
+enum class errc { value_too_large = 1 };
+struct to_chars_result { char* ptr; errc ec; };
+
+template<class T>
+inline to_chars_result to_chars_jeaiii(char *first, char* last, T value)
+{
+    if (last - first < 20)
     {
-        auto n = next - temp;
-        if (count < n)
-            return { last,  TOO_LARGE };
+        char temp[20];
+        size_t n = to_chars_jeaiii<false>(temp, value) - temp;
+        if (last - first < n)
+            return { last,  errc::value_too_large };
         memcpy(first, temp, n);
-        next = first + n;
+        return { first + n, {} };
     }
-    return { next, ERROR{} };
+    return { to_chars_jeaiii<false>(first, value), {} };
 }
 
-#define to_chars_from_int to_chars_from_int_jeaiii<std::to_chars_result, std::errc, std::errc::value_too_large>
+to_chars_result to_chars(char *first, char* last, signed char value) { return to_chars_jeaiii(first, last, value); }

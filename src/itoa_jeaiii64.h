@@ -22,39 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__))
-#define JEAIII_CLANG 1
-#elif defined(_MSC_VER)
-#pragma warning(disable : 4820)
-#pragma warning(disable : 4371)
-#define JEAIII_MSVC 1
-#elif defined(__GNUC__) && !defined(__clang__)
-#define JEAIII_GNUCXX 1
-#endif
-
-#if defined(JEAIII_MSVC)
-#define JEAIII_INLINE [[msvc::forceinline]] inline
-#define JEAIII_NON_GCC_INLINE [[msvc::forceinline]] inline
-#define JEAIII_CLANG_MACOS_INLINE
-#define JEAIII_CLANG_INLINE
-#elif defined(JEAIII_CLANG)
-#if defined(JEAIII_MAC)
-#define JEAIII_CLANG_MACOS_INLINE inline __attribute__((always_inline))
-#else
-#define JEAIII_CLANG_MACOS_INLINE
-#endif
-#define JEAIII_NON_GCC_INLINE inline __attribute__((always_inline))
-#define JEAIII_NO_INLINE __attribute__((noinline))
-#define JEAIII_INLINE inline __attribute__((always_inline))
-#define JEAIII_CLANG_INLINE inline __attribute__((always_inline))
-#elif defined(JEAIII_GNUCXX)
-#define JEAIII_INLINE inline __attribute__((always_inline))
-#define JEAIII_NON_GCC_INLINE
-#define JEAIII_CLANG_INLINE
-#define JEAIII_CLANG_MACOS_INLINE
-#endif
-
-namespace jeaiii
+namespace jeaiii64
 {
     using u32 = decltype(0xffffffff);
     using u64 = decltype(0xffffffffffffffff);
@@ -97,18 +65,9 @@ namespace jeaiii
     }
     digits{ };
 
-    template<bool, class, class F> struct _cond { using type = F; };
-    template<class T, class F> struct _cond<true, T, F> { using type = T; };
-    template<bool B, class T, class F> using cond = typename _cond<B, T, F>::type;
-
-    template<class T> JEAIII_INLINE 
-    char* to_text_from_integer(char* b, T i)
+    template<class T> __forceinline
+    char* to_text_from_integer(char* b, T n)
     {
-        constexpr auto q = sizeof(T);
-        using U = cond<q == 1, unsigned char, cond<q <= sizeof(short), unsigned short, cond<q <= sizeof(u32), u32, u64>>>;
-
-        U n = i < 0 ? *b++ = '-', U(0) - U(i) : U(i);
-
         if (n < u32(1e2))
         {
             *(pair*)b = digits.fd[n];
@@ -150,17 +109,17 @@ namespace jeaiii
                 return b + 8;
             }
 
-            auto f0 = u64(10 * u64(0x1p57) / u64(1e9) + 1) * u32(n);
-            *reinterpret_cast<pair*>(b) = digits.fd[f0 >> 57];
+            auto f0 = u64(10 * u64(0x1p58) / u64(1e9) + 1) * u32(n) >> 26;
+            *reinterpret_cast<pair*>(b) = digits.fd[f0 >> 32];
             b -= n < u32(1e9);
-            auto f2 = (f0 & u64(0x1p57) - 1) * 100;
-            *reinterpret_cast<pair*>(b + 2) = digits.dd[f2 >> 57];
-            auto f4 = (f2 & u64(0x1p57) - 1) * 100;
-            *reinterpret_cast<pair*>(b + 4) = digits.dd[f4 >> 57];
-            auto f6 = (f4 & u64(0x1p57) - 1) * 100;
-            *reinterpret_cast<pair*>(b + 6) = digits.dd[f6 >> 57];
-            auto f8 = (f6 & u64(0x1p57) - 1) * 100;
-            *reinterpret_cast<pair*>(b + 8) = digits.dd[f8 >> 57];
+            auto f2 = (f0 & u64(0x1p32) - 1) * 100;
+            *reinterpret_cast<pair*>(b + 2) = digits.dd[f2 >> 32];
+            auto f4 = (f2 & u64(0x1p32) - 1) * 100;
+            *reinterpret_cast<pair*>(b + 4) = digits.dd[f4 >> 32];
+            auto f6 = (f4 & u64(0x1p32) - 1) * 100;
+            *reinterpret_cast<pair*>(b + 6) = digits.dd[f6 >> 32];
+            auto f8 = (f6 & u64(0x1p32) - 1) * 100;
+            *reinterpret_cast<pair*>(b + 8) = digits.dd[f8 >> 32];
             return b + 10;
         }
 
@@ -210,17 +169,17 @@ namespace jeaiii
         }
         else if (n < u64(0x1p32))
         {
-            auto f0 = u64(10 * u64(0x1p57) / u64(1e9) + 1) * u32(n);
-            *reinterpret_cast<pair*>(b) = digits.fd[f0 >> 57];
+            auto f0 = u64(10 * u64(0x1p58) / u64(1e9) + 1) * u32(n) >> 26;
+            *reinterpret_cast<pair*>(b) = digits.fd[f0 >> 32];
             b -= n < u32(1e9);
-            auto f2 = (f0 & u64(0x1p57) - 1) * 100;
-            *reinterpret_cast<pair*>(b + 2) = digits.dd[f2 >> 57];
-            auto f4 = (f2 & u64(0x1p57) - 1) * 100;
-            *reinterpret_cast<pair*>(b + 4) = digits.dd[f4 >> 57];
-            auto f6 = (f4 & u64(0x1p57) - 1) * 100;
-            *reinterpret_cast<pair*>(b + 6) = digits.dd[f6 >> 57];
-            auto f8 = (f6 & u64(0x1p57) - 1) * 100;
-            *reinterpret_cast<pair*>(b + 8) = digits.dd[f8 >> 57];
+            auto f2 = (f0 & u64(0x1p32) - 1) * 100;
+            *reinterpret_cast<pair*>(b + 2) = digits.dd[f2 >> 32];
+            auto f4 = (f2 & u64(0x1p32) - 1) * 100;
+            *reinterpret_cast<pair*>(b + 4) = digits.dd[f4 >> 32];
+            auto f6 = (f4 & u64(0x1p32) - 1) * 100;
+            *reinterpret_cast<pair*>(b + 6) = digits.dd[f6 >> 32];
+            auto f8 = (f6 & u64(0x1p32) - 1) * 100;
+            *reinterpret_cast<pair*>(b + 8) = digits.dd[f8 >> 32];
             b += 10;
         }
         else

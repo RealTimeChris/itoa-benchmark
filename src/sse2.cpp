@@ -318,6 +318,6 @@ void i64toa_sse2(int64_t value, char* buffer) {
     u64toa_sse2(u, buffer);
 }
 
-//REGISTER_TEST(sse2);
+////REGISTER_TEST(sse2);
 
 #endif

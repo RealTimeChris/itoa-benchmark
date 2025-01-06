@@ -35,28 +35,29 @@ SOFTWARE.
 #if 0
 namespace jeaiii32
 {
-    void to_text(uint32_t n, char* b) { *jeaiii::to_text_n32(b, n) = 0; }
-    void to_text(int32_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
-    void to_text(uint64_t n, char* b) { *jeaiii::to_text_n64(b, n) = 0; }
-    void to_text(int64_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
+    void to_text(uint32_t n, char* b) { *jeaiii32::to_text_n32(b, n) = 0; }
+    void to_text(int32_t n, char* b) { int_to_chars_jeaiii(n, b); }
+    void to_text(uint64_t n, char* b) { *jeaiii32::to_text_n64(b, n) = 0; }
+    void to_text(int64_t n, char* b) { int_to_chars_jeaiii<char>(n, b); }
 }
-REGISTER_TEST_OVERLOAD(jeaiii32::to_text);
+//REGISTER_TEST_OVERLOAD(jeaiii32::to_text);
 #endif
 
 
 #if 1
-//static Test gRegister48("int_to_chars_jeaiii<void>", int_to_chars_jeaiii<void>, int_to_chars_jeaiii<void>, int_to_chars_jeaiii<void>, int_to_chars_jeaiii<void>);
+const char* name{ "int_to_chars_jeaiii<void>" };
+static Test gRegister48(name, int_to_chars_jeaiii<void>, int_to_chars_jeaiii<void>, int_to_chars_jeaiii<void>, int_to_chars_jeaiii<void>);
 #endif
 
 #if 1
 namespace jeaiii
 {
-    void to_text(uint32_t n, char* b) { *to_text_from_integer(b, n) = 0; }
-    //void to_text(int32_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
-    void to_text(uint64_t n, char* b) { *to_text_from_integer(b, n) = 0; }
-    //void to_text(int64_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
+    void u32toa_to_text(uint32_t n, char* b) { *to_text_from_integer(b, n) = 0; }
+    void i32toa_to_text(int32_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
+    void u64toa_to_text(uint64_t n, char* b) { *to_text_from_integer(b, n) = 0; }
+    void i64toa_to_text(int64_t n, char* b) { int_to_chars_jeaiii<void>(n, b); }
+    //REGISTER_TEST(to_text);
 }
-//REGISTER_TEST_OVERLOAD(jeaiii::to_text);
 #endif
 
 
@@ -65,5 +66,5 @@ void i32toa_jeaiii(int32_t i, char* b);
 void u64toa_jeaiii(uint64_t i, char* b);
 void i64toa_jeaiii(int64_t i, char* b);
 
-REGISTER_TEST(jeaiii);
+//REGISTER_TEST(jeaiii);
 

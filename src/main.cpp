@@ -18,7 +18,7 @@ Changes Copyright (c) 2018 James Edward Anhalt III - https://github.com/jeaiii
 
 const unsigned c_scale = 4096 * 4;
 
-const int kTrial = 256 * 17;
+const int kTrial = 256 * 137;
 
 template <typename T>
 struct Traits {
@@ -128,46 +128,27 @@ void VerifyAll() {
         }
     }
 }
-
-#if defined(_WIN32) || defined(_WIN64)
 #include <intrin.h>
-#else
-#include <x86intrin.h>
-#endif
 
 uint64_t TimeEnter() {
     int info[4];
 
-#if defined(_WIN32) || defined(_WIN64)
     _ReadWriteBarrier();
     __cpuidex(info, 0, 0);
     uint64_t time = __rdtsc();
     _ReadWriteBarrier();
-#else
-    asm volatile ("cpuid" : "=a"(info[0]), "=b"(info[1]), "=c"(info[2]), "=d"(info[3]) : "a"(0), "c"(0));
-    uint64_t time = __rdtsc();
-#endif
-
     return time;
 }
 
 uint64_t TimeLeave() {
     int info[4];
     unsigned int aux;
-
-#if defined(_WIN32) || defined(_WIN64)
     _ReadWriteBarrier();
     uint64_t time = __rdtscp(&aux);
     __cpuidex(info, 0, 0);
     _ReadWriteBarrier();
-#else
-    uint64_t time = __rdtscp(&aux);
-    asm volatile ("cpuid" : "=a"(info[0]), "=b"(info[1]), "=c"(info[2]), "=d"(info[3]) : "a"(0), "c"(0));
-#endif
-
     return time;
 }
-
 
 
 template<class T, size_t N>
@@ -343,6 +324,10 @@ void BenchAll() {
 int main() {
     // sort tests
     TestList& tests = TestManager::Instance().GetTests();
+
+    SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+    SetThreadAffinityMask(GetCurrentThread(), 1 << 3);
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 
     VerifyAll();
     BenchAll();

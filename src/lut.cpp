@@ -74,4 +74,4 @@ void i64toa_lut(int64_t value, char* buffer) {
     u64toa_lut(u, buffer);
 }
 
-//REGISTER_TEST(lut);
+////REGISTER_TEST(lut);

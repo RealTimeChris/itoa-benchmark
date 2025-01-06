@@ -91,7 +91,7 @@ null          | Do nothing.
 
 1. How to add an implementation?
    
-   You may clone an existing implementation file (e.g. `naive.cpp`). And then modify it. Re-run `premake` to add it to project or makefile. Note that it will automatically register to the benchmark by macro `REGISTER_TEST(name)`.
+   You may clone an existing implementation file (e.g. `naive.cpp`). And then modify it. Re-run `premake` to add it to project or makefile. Note that it will automatically register to the benchmark by macro `////REGISTER_TEST(name)`.
 
    Making pull request of new implementations is welcome.
 

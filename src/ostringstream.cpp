@@ -31,5 +31,5 @@ void i64toa_ostringstream(int64_t value, char* buffer) {
 }
 
 #if RUN_CPPITOA
-//REGISTER_TEST(ostringstream);
+////REGISTER_TEST(ostringstream);
 #endif

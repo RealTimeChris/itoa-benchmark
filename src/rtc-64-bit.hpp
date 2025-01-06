@@ -233,174 +233,87 @@ alignas(2) RTC_ITOA_INLINE_VARIABLE char charTable2[]{ 0x30u, 0x30u, 0x30u, 0x31
 	0x30u, 0x38u, 0x31u, 0x38u, 0x32u, 0x38u, 0x33u, 0x38u, 0x34u, 0x38u, 0x35u, 0x38u, 0x36u, 0x38u, 0x37u, 0x38u, 0x38u, 0x38u, 0x39u, 0x39u, 0x30u, 0x39u, 0x31u, 0x39u,
 	0x32u, 0x39u, 0x33u, 0x39u, 0x34u, 0x39u, 0x35u, 0x39u, 0x36u, 0x39u, 0x37u, 0x39u, 0x38u, 0x39u, 0x39u };
 
-RTC_ITOA_INLINE_VARIABLE uint8_t digitCounts32[]{ 9, 9, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1 };
+RTC_ITOA_INLINE_VARIABLE uint8_t digitCounts[]{ 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10, 10,
+	10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1 };
 
-RTC_ITOA_INLINE_VARIABLE uint32_t digitCountThresholds32[]{ 0u, 9u, 99u, 999u, 9999u, 99999u, 999999u, 9999999u, 99999999u, 999999999u };
+RTC_ITOA_INLINE_VARIABLE uint64_t digitCountThresholds[]{ 0ull, 9ull, 99ull, 999ull, 9999ull, 99999ull, 999999ull, 9999999ull, 99999999ull, 999999999ull, 9999999999ull,
+	99999999999ull, 999999999999ull, 9999999999999ull, 99999999999999ull, 999999999999999ull, 9999999999999999ull, 99999999999999999ull, 999999999999999999ull,
+	9999999999999999999ull };
 
-RTC_ITOA_INLINE uint32_t fastDigitCount32(const uint32_t inputValue) {
-	const uint32_t originalDigitCount{ static_cast<uint32_t>(digitCounts32[simd_internal::lzcnt(inputValue)]) };
-	return originalDigitCount + static_cast<uint32_t>(inputValue > digitCountThresholds32[originalDigitCount]);
+RTC_ITOA_INLINE uint64_t fastDigitCount(const uint64_t inputValue) {
+	const uint64_t originalDigitCount{ static_cast<uint64_t>(digitCounts[simd_internal::lzcnt(inputValue)]) };
+	return originalDigitCount + static_cast<uint64_t>(inputValue > digitCountThresholds[originalDigitCount]);
 }
 
 RTC_ITOA_INLINE static string_buffer_ptr length1(string_buffer_ptr buf, const uint64_t value) noexcept {
-	*reinterpret_cast<pair*>(buf) = digits.fd[value];
+	std::memcpy(buf, charTable1 + value, 1);
 	return buf + 1;
 }
 
 RTC_ITOA_INLINE static string_buffer_ptr length2(string_buffer_ptr buf, const uint64_t value) noexcept {
-	*reinterpret_cast<pair*>(buf) = digits.fd[value];
+	std::memcpy(buf, charTable2 + value * 2, 2);
 	return buf + 2;
 }
 
 RTC_ITOA_INLINE static string_buffer_ptr length3(string_buffer_ptr buf, const uint64_t value) noexcept {
-	auto f0 = uint32_t(10 * 0x1p24 / 1e3 + 1) * value;
-	*reinterpret_cast<pair*>(buf) = digits.fd[f0 >> 24];
-	auto f2 = (f0 & uint32_t(0x1p24) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 1) = digits.dd[f2 >> 24];
+	const uint64_t aa = (value * 5243) >> 19;
+	std::memcpy(buf, charTable1 + aa, 2);
+	std::memcpy(buf + 1, charTable2 + (value - aa * 100) * 2, 2);
 	return buf + 3;
 }
 
 RTC_ITOA_INLINE static string_buffer_ptr length4(string_buffer_ptr buf, const uint64_t value) noexcept {
-	auto f0 = uint32_t(10 * 0x1p24 / 1e3 + 1) * value;
-	*reinterpret_cast<pair*>(buf) = digits.fd[f0 >> 24];
-	auto f2 = (f0 & uint32_t(0x1p24) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 2) = digits.dd[f2 >> 24];
+	const uint64_t aa = (value * 5243) >> 19;
+	std::memcpy(buf, charTable2 + aa * 2, 2);
+	std::memcpy(buf + 2, charTable2 + (value - aa * 100) * 2, 2);
 	return buf + 4;
 }
 
 RTC_ITOA_INLINE static string_buffer_ptr length5(string_buffer_ptr buf, const uint64_t value) noexcept {
-	auto f0 = uint64_t(10 * 0x1p32 / 1e5 + 1) * value;
-	*reinterpret_cast<pair*>(buf) = digits.fd[f0 >> 32];
-	auto f2 = (f0 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 1) = digits.dd[f2 >> 32];
-	auto f4 = (f2 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 3) = digits.dd[f4 >> 32];
+	const uint64_t aa = (value * 429497) >> 32;
+	const uint64_t bbcc = value - aa * 10000;
+	const uint64_t bb = (bbcc * 5243) >> 19;
+	std::memcpy(buf, charTable1 + aa, 2);
+	std::memcpy(buf + 1, charTable2 + bb * 2, 2);
+	std::memcpy(buf + 3, charTable2 + (bbcc - bb * 100) * 2, 2);
 	return buf + 5;
 }
 
 RTC_ITOA_INLINE static string_buffer_ptr length6(string_buffer_ptr buf, const uint64_t value) noexcept {
-	auto f0 = uint64_t(10 * 0x1p32 / 1e5 + 1) * value;
-	*reinterpret_cast<pair*>(buf) = digits.fd[f0 >> 32];
-	auto f2 = (f0 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 2) = digits.dd[f2 >> 32];
-	auto f4 = (f2 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 4) = digits.dd[f4 >> 32];
+	const uint64_t aa = (value * 429497) >> 32;
+	const uint64_t bbcc = value - aa * 10000;
+	const uint64_t bb = (bbcc * 5243) >> 19;
+	std::memcpy(buf, charTable2 + aa * 2, 2);
+	std::memcpy(buf + 2, charTable2 + bb * 2, 2);
+	std::memcpy(buf + 4, charTable2 + (bbcc - bb * 100) * 2, 2);
 	return buf + 6;
 }
 
 RTC_ITOA_INLINE static string_buffer_ptr length7(string_buffer_ptr buf, const uint64_t value) noexcept {
-	auto f0 = uint64_t(10 * 0x1p48 / 1e7 + 1) * value >> 16;
-	*reinterpret_cast<pair*>(buf) = digits.fd[f0 >> 32];
-	auto f2 = (f0 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 1) = digits.dd[f2 >> 32];
-	auto f4 = (f2 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 3) = digits.dd[f4 >> 32];
-	auto f6 = (f4 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 5) = digits.dd[f6 >> 32];
+	const uint64_t aabb = (value * 109951163) >> 40;
+	const uint64_t ccdd = value - aabb * 10000;
+	const uint64_t aa = (aabb * 5243) >> 19;
+	const uint64_t cc = (ccdd * 5243) >> 19;
+	std::memcpy(buf, charTable1 + aa, 2);
+	std::memcpy(buf + 1, charTable2 + (aabb - aa * 100) * 2, 2);
+	std::memcpy(buf + 3, charTable2 + cc * 2, 2);
+	std::memcpy(buf + 5, charTable2 + (ccdd - cc * 100) * 2, 2);
 	return buf + 7;
 }
 
 RTC_ITOA_INLINE static string_buffer_ptr length8(string_buffer_ptr buf, const uint64_t value) noexcept {
-	auto f0 = uint64_t(10 * 0x1p48 / 1e7 + 1) * value >> 16;
-	*reinterpret_cast<pair*>(buf) = digits.fd[f0 >> 32];
-	auto f2 = (f0 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 2) = digits.dd[f2 >> 32];
-	auto f4 = (f2 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 4) = digits.dd[f4 >> 32];
-	auto f6 = (f4 & uint64_t(0x1p32) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 6) = digits.dd[f6 >> 32];
+	const uint64_t aabb = (value * 109951163) >> 40;
+	const uint64_t ccdd = value - aabb * 10000;
+	const uint64_t aa = (aabb * 5243) >> 19;
+	const uint64_t cc = (ccdd * 5243) >> 19;
+	std::memcpy(buf, charTable2 + aa * 2, 2);
+	std::memcpy(buf + 2, charTable2 + (aabb - aa * 100) * 2, 2);
+	std::memcpy(buf + 4, charTable2 + cc * 2, 2);
+	std::memcpy(buf + 6, charTable2 + (ccdd - cc * 100) * 2, 2);
 	return buf + 8;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length32_9(string_buffer_ptr buf, const uint64_t value) noexcept {
-	auto f0 = uint64_t(10 * uint64_t(0x1p57) / uint64_t(1e9) + 1) * uint32_t(value);
-	*reinterpret_cast<pair*>(buf) = digits.fd[f0 >> 57];
-	auto f2 = (f0 & uint64_t(0x1p57) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 1) = digits.dd[f2 >> 57];
-	auto f4 = (f2 & uint64_t(0x1p57) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 3) = digits.dd[f4 >> 57];
-	auto f6 = (f4 & uint64_t(0x1p57) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 5) = digits.dd[f6 >> 57];
-	auto f8 = (f6 & uint64_t(0x1p57) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 7) = digits.dd[f8 >> 57];
-	return buf + 9;
-}
-
-RTC_ITOA_INLINE static string_buffer_ptr length32_10(string_buffer_ptr buf, const uint64_t value) noexcept {
-	auto f0 = uint64_t(10 * uint64_t(0x1p57) / uint64_t(1e9) + 1) * uint32_t(value);
-	*reinterpret_cast<pair*>(buf) = digits.fd[f0 >> 57];
-	auto f2 = (f0 & uint64_t(0x1p57) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 2) = digits.dd[f2 >> 57];
-	auto f4 = (f2 & uint64_t(0x1p57) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 4) = digits.dd[f4 >> 57];
-	auto f6 = (f4 & uint64_t(0x1p57) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 6) = digits.dd[f6 >> 57];
-	auto f8 = (f6 & uint64_t(0x1p57) - 1) * 100;
-	*reinterpret_cast<pair*>(buf + 8) = digits.dd[f8 >> 57];
-	return buf + 10;
-}
-
-RTC_ITOA_INLINE static string_buffer_ptr impl32(string_buffer_ptr buf, const uint64_t value) noexcept {
-	const uint64_t index{ fastDigitCount32(value) };
-	switch (index) {
-	case 1: {
-		return length1(buf, value);
-	}
-	case 2: {
-		return length2(buf, value);
-	}
-	case 3: {
-		return length3(buf, value);
-	}
-	case 4: {
-		return length4(buf, value);
-	}
-	case 5: {
-		return length5(buf, value);
-	}
-	case 6: {
-		return length6(buf, value);
-	}
-	case 7: {
-		return length7(buf, value);
-	}
-	case 8: {
-		return length8(buf, value);
-	}
-	case 9: {
-		return length32_9(buf, value);
-	}
-	case 10: {
-		return length32_10(buf, value);
-	}
-	default: {
-		std::unreachable();
-	}
-	}
-}
-
-template<jsonifier::concepts::uns32_t value_type_new> RTC_ITOA_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, const value_type_new value) noexcept {
-	return impl32(buf, value);
-}
-
-template<jsonifier::concepts::sig32_t value_type_new> RTC_ITOA_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, const value_type_new value) noexcept {
-	*buf = '-';
-	return toChars(buf + (value < 0), static_cast<const uint32_t>(value ^ (value >> 31ull)) - (value >> 31ull));
-}
-
-RTC_ITOA_INLINE_VARIABLE uint8_t digitCounts64[]{ 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10,
-	10, 10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1 };
-
-RTC_ITOA_INLINE_VARIABLE uint64_t digitCountThresholds64[]{ 0ull, 9ull, 99ull, 999ull, 9999ull, 99999ull, 999999ull, 9999999ull, 99999999ull, 999999999ull, 9999999999ull,
-	99999999999ull, 999999999999ull, 9999999999999ull, 99999999999999ull, 999999999999999ull, 9999999999999999ull, 99999999999999999ull, 999999999999999999ull,
-	9999999999999999999ull };
-
-RTC_ITOA_INLINE uint64_t fastDigitCount64(const uint64_t inputValue) {
-	const uint64_t originalDigitCount{ static_cast<uint64_t>(digitCounts64[simd_internal::lzcnt(inputValue)]) };
-	return originalDigitCount + static_cast<uint64_t>(inputValue > digitCountThresholds64[originalDigitCount]);
-}
-
-RTC_ITOA_INLINE static string_buffer_ptr length64_9(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length9(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t high = value / 100000000ull;
 	const uint64_t low = value - high * 100000000ull;
 	const uint64_t aabb = (low * 109951163ull) >> 40ull;
@@ -416,7 +329,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_9(string_buffer_ptr buf, const
 	return buf + 9ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_10(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length10(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t high = value / 100000000ull;
 	const uint64_t low = value - high * 100000000ull;
 	const uint64_t aabb = (low * 109951163ull) >> 40ull;
@@ -432,7 +345,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_10(string_buffer_ptr buf, cons
 	return buf + 10ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_11(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length11(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t high = value / 100000000ull;
 	const uint64_t low = value - high * 100000000ull;
 	uint64_t aa = (high * 5243ull) >> 19ull;
@@ -451,7 +364,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_11(string_buffer_ptr buf, cons
 	return buf + 11ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_12(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length12(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t high = value / 100000000ull;
 	const uint64_t low = value - high * 100000000ull;
 	uint64_t aa = (high * 5243ull) >> 19ull;
@@ -470,7 +383,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_12(string_buffer_ptr buf, cons
 	return buf + 12ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_13(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length13(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t high = value / 100000000ull;
 	const uint64_t low = value - high * 100000000ull;
 	uint64_t aa = (high * 429497ull) >> 32ull;
@@ -492,7 +405,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_13(string_buffer_ptr buf, cons
 	return buf + 13ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_14(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length14(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t high = value / 100000000ull;
 	const uint64_t low = value - high * 100000000ull;
 	const uint64_t aabb = (low * 109951163ull) >> 40ull;
@@ -514,7 +427,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_14(string_buffer_ptr buf, cons
 	return buf + 14ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_15(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length15(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t high = value / 100000000ull;
 	const uint64_t low = value - high * 100000000ull;
 	uint64_t aabb = (high * 109951163ull) >> 40ull;
@@ -540,7 +453,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_15(string_buffer_ptr buf, cons
 	return buf + 15ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_16(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length16(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t high = value / 100000000ull;
 	const uint64_t low = value - high * 100000000ull;
 	uint64_t aabb = (high * 109951163ull) >> 40ull;
@@ -566,7 +479,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_16(string_buffer_ptr buf, cons
 	return buf + 16ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_17(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length17(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t tmp = value / 100000000ull;
 	const uint64_t low = value - tmp * 100000000ull;
 	const uint64_t high = tmp / 10000ull;
@@ -595,7 +508,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_17(string_buffer_ptr buf, cons
 	return buf + 17ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_18(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length18(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t tmp = value / 100000000ull;
 	const uint64_t low = value - tmp * 100000000ull;
 	const uint64_t high = tmp / 10000ull;
@@ -624,7 +537,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_18(string_buffer_ptr buf, cons
 	return buf + 18ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_19(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length19(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t tmp = value / 100000000ull;
 	const uint64_t low = value - tmp * 100000000ull;
 	const uint64_t high = tmp / 10000ull;
@@ -656,7 +569,7 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_19(string_buffer_ptr buf, cons
 	return buf + 19ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr length64_20(string_buffer_ptr buf, const uint64_t value) noexcept {
+RTC_ITOA_INLINE static string_buffer_ptr length20(string_buffer_ptr buf, const uint64_t value) noexcept {
 	const uint64_t tmp = value / 100000000ull;
 	const uint64_t low = value - tmp * 100000000ull;
 	const uint64_t high = tmp / 10000ull;
@@ -688,91 +601,97 @@ RTC_ITOA_INLINE static string_buffer_ptr length64_20(string_buffer_ptr buf, cons
 	return buf + 20ull;
 }
 
-RTC_ITOA_INLINE static string_buffer_ptr impl64(string_buffer_ptr buf, const uint64_t value) noexcept {
-	const uint64_t index{ fastDigitCount64(value) };
-	switch (index) {
-	case 1: {
+template<size_t index> RTC_ITOA_INLINE static string_buffer_ptr impl64(string_buffer_ptr buf, const uint64_t value) noexcept {
+	if constexpr (index == 1) {
 		return length1(buf, value);
 	}
-	case 2: {
+	else if constexpr (index == 2) {
 		return length2(buf, value);
 	}
-	case 3: {
+	else if constexpr (index == 3) {
 		return length3(buf, value);
 	}
-	case 4: {
+	else if constexpr (index == 4) {
 		return length4(buf, value);
 	}
-	case 5: {
+	else if constexpr (index == 5) {
 		return length5(buf, value);
 	}
-	case 6: {
+	else if constexpr (index == 6) {
 		return length6(buf, value);
 	}
-	case 7: {
+	else if constexpr (index == 7) {
 		return length7(buf, value);
 	}
-	case 8: {
+	else if constexpr (index == 8) {
 		return length8(buf, value);
 	}
-	case 9: {
-		return length64_9(buf, value);
+	else if constexpr (index == 9) {
+		return length9(buf, value);
 	}
-	case 10: {
-		return length64_10(buf, value);
+	else if constexpr (index == 10) {
+		return length10(buf, value);
 	}
-	case 11: {
-		return length64_11(buf, value);
+	else if constexpr (index == 11) {
+		return length11(buf, value);
 	}
-	case 12: {
-		return length64_12(buf, value);
+	else if constexpr (index == 12) {
+		return length12(buf, value);
 	}
-	case 13: {
-		return length64_13(buf, value);
+	else if constexpr (index == 13) {
+		return length13(buf, value);
 	}
-	case 14: {
-		return length64_14(buf, value);
+	else if constexpr (index == 14) {
+		return length14(buf, value);
 	}
-	case 15: {
-		return length64_15(buf, value);
+	else if constexpr (index == 15) {
+		return length15(buf, value);
 	}
-	case 16: {
-		return length64_16(buf, value);
+	else if constexpr (index == 16) {
+		return length16(buf, value);
 	}
-	case 17: {
-		return length64_17(buf, value);
+	else if constexpr (index == 17) {
+		return length17(buf, value);
 	}
-	case 18: {
-		return length64_18(buf, value);
+	else if constexpr (index == 18) {
+		return length18(buf, value);
 	}
-	case 19: {
-		return length64_19(buf, value);
+	else if constexpr (index == 19) {
+		return length19(buf, value);
 	}
-	case 20: {
-		return length64_20(buf, value);
+	else if constexpr (index == 20) {
+		return length20(buf, value);
 	}
-	default: {
+	else {
 		std::unreachable();
-	}
 	}
 }
 
+template<jsonifier::concepts::uns64_t value_type_new, size_t... indices>
+RTC_ITOA_INLINE string_buffer_ptr impl64(string_buffer_ptr buf, const value_type_new value, size_t index, std::index_sequence<indices...>) noexcept {
+	char* ptr{};
+	((index == indices && (ptr = impl64<indices>(buf, value))), ...);
+	return ptr;
+}
+
 template<jsonifier::concepts::uns64_t value_type_new> RTC_ITOA_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, const value_type_new value) noexcept {
-	return impl64(buf, value);
+	const uint64_t index{ fastDigitCount(value) };
+	return impl64(buf, value, index, std::make_index_sequence<21>{});
 }
 
 template<jsonifier::concepts::sig64_t value_type_new> RTC_ITOA_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, const value_type_new value) noexcept {
 	*buf = '-';
 	return toChars(buf + (value < 0), static_cast<const uint64_t>(value ^ (value >> 63)) - (value >> 63));
 }
+#include <iostream>
 
 RTC_ITOA_INLINE void u32toa_rtc_itoa(uint32_t value, char* buffer) {
-	auto newPtr = toChars(buffer, value);
+	auto newPtr = toChars(buffer, static_cast<uint64_t>(value));
 	buffer[newPtr - buffer] = '\0';
 }
 
 RTC_ITOA_INLINE void i32toa_rtc_itoa(int32_t value, char* buffer) {
-	auto newPtr = toChars(buffer, value);
+	auto newPtr = toChars(buffer, static_cast<int64_t>(value));
 	buffer[newPtr - buffer] = '\0';
 }
 
